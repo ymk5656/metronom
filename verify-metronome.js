@@ -63,26 +63,75 @@ async function runVerification() {
       `HiDPI scaling active: buffer (${canvasDimensions.width}x${canvasDimensions.height}) = client (${canvasDimensions.clientWidth}x${canvasDimensions.clientHeight}) * DPR (${canvasDimensions.dpr})`
     );
 
-    // 4. Verify initial stopped state
+    // 4. Verify initial stopped state and mute onboarding hint
     const initState = await page.evaluate(() => window.__metronomeTestApi.getState());
     assert(initState.isRunning === false, 'Initial state: stopped/idle');
     assert(initState.currentBpm === 120, 'Initial default BPM is 120');
     assert(initState.currentAngle === 0, 'Initial pendulum angle is 0° (vertical dead center)');
     assert(initState.TEMPO_MARKS.length === 38, 'Tempo scale has authentic 38 markings');
+    assert(initState.isMuted === false, 'Initial mute state is UNMUTED');
+    assert(initState.showMuteHint === true, 'Initial mute onboarding hint is VISIBLE');
 
-    // 5. Start metronome via body tap
-    console.log('2. Testing Start / Stop via tap ...');
+    // Screenshot initial onboarding hint
+    await page.screenshot({ path: path.join(__dirname, 'preview_initial_hint.png') });
+    console.log('Saved preview_initial_hint.png');
+
     const canvasRect = await page.$eval('#metronome-canvas', (el) => {
       const r = el.getBoundingClientRect();
       return { left: r.left, top: r.top, width: r.width, height: r.height };
     });
 
-    // Tap on lower base shield (outer body) to start
+    // 5. Test Mute Toggle via Right Button (Winding Key)
+    console.log('2. Testing Mute toggle via Right Winding Key ...');
+    const windingKeyX = canvasRect.left + canvasRect.width * (390 / 460);
+    const windingKeyY = canvasRect.top + canvasRect.height * (530 / 860);
+
+    // Tap right button
+    await page.touchscreen.tap(windingKeyX, windingKeyY);
+    await new Promise((r) => setTimeout(r, 150));
+
+    const mutedState = await page.evaluate(() => window.__metronomeTestApi.getState());
+    assert(mutedState.isMuted === true, 'Mute toggled ON via right winding key');
+    assert(mutedState.showMuteHint === false, 'Onboarding hint dismissed after tapping right button');
+    assert(mutedState.isRunning === false, 'Metronome remained stopped when tapping winding key');
+
+    // Screenshot muted state
+    await page.screenshot({ path: path.join(__dirname, 'preview_muted_state.png') });
+    console.log('Saved preview_muted_state.png');
+
+    // Tap right button again to unmute
+    await page.touchscreen.tap(windingKeyX, windingKeyY);
+    await new Promise((r) => setTimeout(r, 150));
+    const unmutedState = await page.evaluate(() => window.__metronomeTestApi.getState());
+    assert(unmutedState.isMuted === false, 'Mute toggled OFF via right winding key');
+
+    // 6. Start metronome via body tap
+    console.log('3. Testing Start / Stop via tap ...');
     await page.touchscreen.tap(canvasRect.left + canvasRect.width / 2, canvasRect.top + canvasRect.height * 0.75);
     await new Promise((r) => setTimeout(r, 200));
 
     const startedState = await page.evaluate(() => window.__metronomeTestApi.getState());
     assert(startedState.isRunning === true, 'Metronome started on body tap');
+
+    // 7. Test Mute toggle while metronome is RUNNING (should NOT stop swinging)
+    console.log('4. Testing Mute toggle during active swinging ...');
+    await page.touchscreen.tap(windingKeyX, windingKeyY);
+    await new Promise((r) => setTimeout(r, 150));
+
+    const runningMutedState = await page.evaluate(() => window.__metronomeTestApi.getState());
+    assert(runningMutedState.isMuted === true, 'Mute toggled ON while running');
+    assert(runningMutedState.isRunning === true, 'Metronome continues swinging without stopping when right key is pressed');
+
+    // Capture screenshot of running + muted
+    await page.screenshot({ path: path.join(__dirname, 'preview_running_muted.png') });
+    console.log('Saved preview_running_muted.png');
+
+    // Unmute while running
+    await page.touchscreen.tap(windingKeyX, windingKeyY);
+    await new Promise((r) => setTimeout(r, 150));
+    const runningUnmutedState = await page.evaluate(() => window.__metronomeTestApi.getState());
+    assert(runningUnmutedState.isMuted === false, 'Unmuted while running');
+    assert(runningUnmutedState.isRunning === true, 'Metronome still running after unmuting');
 
     // 6. Test Pendulum Harmonic Oscillations over time
     console.log('3. Verifying inverted pendulum harmonic swing ...');

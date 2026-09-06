@@ -122,6 +122,15 @@
   let currentBpm = 120;
   let targetBpm = 120;
 
+  // Mute & Onboarding Hint State
+  let isMuted = false;
+  let showMuteHint = true;
+  let muteHintAlpha = 1.0;
+  const muteHintSpawnTime = performance.now();
+  let muteFeedbackText = '';
+  let muteFeedbackAlpha = 0.0;
+  let lastMuteFeedbackTime = 0;
+
   // Dragging state
   let isDraggingWeight = false;
   let dragCurrentY = getWeightYForBpm(120);
@@ -157,7 +166,7 @@
    * Alternates between a crisp "tick" (left-to-right swing) and a slightly deeper "tock" (right-to-left swing).
    */
   function playMechanicalClick(time, beatNumber) {
-    if (!audioCtx) return;
+    if (isMuted || !audioCtx) return;
 
     const isTick = (beatNumber % 2 === 0);
     const primaryFreq = isTick ? 1080 : 940;
@@ -465,10 +474,17 @@
     ctx.shadowOffsetY = 5;
 
     const knobGrad = ctx.createLinearGradient(knobX, knobY, knobX + knobW, knobY);
-    knobGrad.addColorStop(0.0, '#aa7e1d');
-    knobGrad.addColorStop(0.35, '#fdeea6');
-    knobGrad.addColorStop(0.7, '#d2a336');
-    knobGrad.addColorStop(1.0, '#744f0b');
+    if (isMuted) {
+      knobGrad.addColorStop(0.0, '#755416');
+      knobGrad.addColorStop(0.35, '#b88d30');
+      knobGrad.addColorStop(0.7, '#8f681d');
+      knobGrad.addColorStop(1.0, '#4e3308');
+    } else {
+      knobGrad.addColorStop(0.0, '#aa7e1d');
+      knobGrad.addColorStop(0.35, '#fdeea6');
+      knobGrad.addColorStop(0.7, '#d2a336');
+      knobGrad.addColorStop(1.0, '#744f0b');
+    }
     ctx.fillStyle = knobGrad;
     ctx.beginPath();
     ctx.roundRect(knobX, knobY, knobW, knobH, 4);
@@ -477,13 +493,51 @@
 
     // Knurling ridges on brass key
     ctx.save();
-    ctx.strokeStyle = 'rgba(70, 45, 8, 0.5)';
+    ctx.strokeStyle = isMuted ? 'rgba(50, 30, 5, 0.65)' : 'rgba(70, 45, 8, 0.5)';
     ctx.lineWidth = 1;
     for (let ky = knobY + 4; ky < knobY + knobH - 3; ky += 3.5) {
       ctx.beginPath();
       ctx.moveTo(knobX + 1, ky);
       ctx.lineTo(knobX + knobW - 1, ky);
       ctx.stroke();
+    }
+    ctx.restore();
+
+    // Subtle audio status LED on top of the winding key
+    ctx.save();
+    const iconCenterX = knobX + knobW / 2;
+    const ledCenterY = knobY - 8;
+
+    if (isMuted) {
+      // Warm coral/red glowing dot on top of key (MUTE ACTIVE)
+      ctx.fillStyle = '#ff4d4f';
+      ctx.shadowColor = '#ff4d4f';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(iconCenterX, ledCenterY, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner bright specular highlight
+      ctx.fillStyle = '#ffa39e';
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.arc(iconCenterX - 0.8, ledCenterY - 0.8, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Subtle emerald green active dot on top of key (SOUND ON)
+      ctx.fillStyle = '#52c41a';
+      ctx.shadowColor = '#52c41a';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(iconCenterX, ledCenterY, 3.0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner bright highlight
+      ctx.fillStyle = '#b7eb8f';
+      ctx.shadowBlur = 0;
+      ctx.beginPath();
+      ctx.arc(iconCenterX - 0.7, ledCenterY - 0.7, 1.0, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
   }
@@ -815,9 +869,14 @@
     ctx.fillStyle = isRunning ? 'rgba(0, 229, 163, 0.8)' : 'rgba(255, 255, 255, 0.45)';
     ctx.font = '8.5px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.letterSpacing = '1px';
-    const statusText = isRunning
-      ? '● RUNNING • TAP TO STOP'
-      : (isDraggingWeight ? 'SLIDING WEIGHT • RELEASE TO SET' : 'IDLE • TAP BODY TO START');
+    let statusText;
+    if (isRunning) {
+      statusText = isMuted ? '● RUNNING [MUTED 🔇] • TAP TO STOP' : '● RUNNING • TAP TO STOP';
+    } else if (isDraggingWeight) {
+      statusText = 'SLIDING WEIGHT • RELEASE TO SET';
+    } else {
+      statusText = isMuted ? 'IDLE [MUTED 🔇] • TAP BODY TO START' : 'IDLE • TAP BODY TO START';
+    }
     ctx.fillText(statusText, CX, boxY + 42);
     ctx.letterSpacing = '0px';
 
@@ -1035,6 +1094,140 @@
     ctx.restore();
   }
 
+  /**
+   * Toggle mute state and show feedback toast
+   */
+  function toggleMute() {
+    initAudioContext();
+    isMuted = !isMuted;
+    showMuteHint = false;
+    muteFeedbackText = isMuted ? '🔇 음소거 (MUTED)' : '🔊 소리 켜짐 (SOUND ON)';
+    muteFeedbackAlpha = 1.0;
+    lastMuteFeedbackTime = performance.now();
+    if (navigator.vibrate) {
+      navigator.vibrate(isMuted ? [15, 35, 15] : 20);
+    }
+  }
+
+  /**
+   * Draw initial onboarding hint pointing directly to the right winding key
+   */
+  function drawMuteHint() {
+    if (!showMuteHint) return;
+
+    const elapsed = performance.now() - muteHintSpawnTime;
+    // Auto fade after 8 seconds over 1.2s
+    if (elapsed > 8000) {
+      const fadeProgress = (elapsed - 8000) / 1200;
+      if (fadeProgress >= 1.0) {
+        showMuteHint = false;
+        return;
+      }
+      muteHintAlpha = 1.0 - fadeProgress;
+    } else {
+      muteHintAlpha = Math.min(1.0, elapsed / 280);
+    }
+
+    ctx.save();
+    ctx.globalAlpha = muteHintAlpha;
+
+    // Gentle floating bobbing animation
+    const bob = Math.sin(elapsed * 0.005) * 3;
+
+    // Tooltip Card dimensions (pointing towards winding key at x: 388, y: 515)
+    const cardX = 168;
+    const cardY = 444 + bob;
+    const cardW = 212;
+    const cardH = 50;
+
+    // Outer drop shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetY = 4;
+
+    // Card background
+    ctx.fillStyle = 'rgba(18, 18, 22, 0.95)';
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, cardW, cardH, 8);
+    ctx.fill();
+
+    // Callout pointer arrow pointing down-right toward winding key (388, 514 + bob)
+    ctx.beginPath();
+    ctx.moveTo(cardX + cardW - 32, cardY + cardH - 1);
+    ctx.lineTo(cardX + cardW + 8, cardY + cardH + 16);
+    ctx.lineTo(cardX + cardW - 10, cardY + cardH - 1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Fine gold border with pulsing accent
+    const pulse = 0.5 + 0.5 * Math.sin(elapsed * 0.006);
+    ctx.strokeStyle = `rgba(223, 190, 104, ${0.7 + 0.3 * pulse})`;
+    ctx.lineWidth = 1.4;
+    ctx.shadowColor = `rgba(223, 190, 104, ${0.4 * pulse})`;
+    ctx.shadowBlur = 8 * pulse;
+    ctx.stroke();
+
+    // Text content inside card
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    // Line 1: Korean guide with mute icon
+    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillStyle = '#ffdf88';
+    ctx.fillText('🔇 우측 태엽: 터치하여 음소거', cardX + 12, cardY + 18);
+
+    // Line 2: English subtext
+    ctx.font = '9px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.68)';
+    ctx.fillText('Right Key: Tap to Mute / Unmute', cardX + 12, cardY + 34);
+
+    ctx.restore();
+  }
+
+  /**
+   * Draw temporary animated feedback toast when user toggles mute
+   */
+  function drawMuteFeedback() {
+    if (muteFeedbackAlpha <= 0) return;
+
+    const elapsed = performance.now() - lastMuteFeedbackTime;
+    if (elapsed > 1800) {
+      muteFeedbackAlpha = 0;
+      return;
+    } else if (elapsed > 1200) {
+      muteFeedbackAlpha = 1.0 - (elapsed - 1200) / 600;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = muteFeedbackAlpha;
+
+    const toastW = 156;
+    const toastH = 28;
+    const toastX = CX - toastW / 2;
+    const toastY = 538;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = isMuted ? 'rgba(38, 14, 14, 0.94)' : 'rgba(12, 34, 18, 0.94)';
+    ctx.beginPath();
+    ctx.roundRect(toastX, toastY, toastW, toastH, 14);
+    ctx.fill();
+
+    ctx.strokeStyle = isMuted ? '#ff4d4f' : '#52c41a';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 10.5px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = isMuted ? '#ffa39e' : '#b7eb8f';
+    ctx.fillText(muteFeedbackText, CX, toastY + toastH / 2);
+
+    ctx.restore();
+  }
+
   // --- MAIN RENDER LOOP ---
   function render() {
     requestAnimationFrame(render);
@@ -1066,7 +1259,7 @@
     ctx.setTransform(scaleRatio, 0, 0, scaleRatio, 0, 0);
     ctx.clearRect(0, 0, VW, VH);
 
-    // 1. Draw Metronome Outer Case & Cavity
+    // 1. Draw Metronome Outer Case & Cavity (including winding key)
     drawCase();
 
     // 2. Draw Brass Face Plate with Scale Markings
@@ -1077,6 +1270,10 @@
 
     // 4. Draw Lower Front Shield (covers pivot) & Digital Readout
     drawFrontBaseCover();
+
+    // 5. Draw Onboarding Mute Guide Tooltip & Toast Feedback
+    drawMuteHint();
+    drawMuteFeedback();
 
     ctx.restore();
   }
@@ -1105,6 +1302,12 @@
     return inY && inX;
   }
 
+  function isOverWindingKey(x, y) {
+    // Generous touch hit region around right winding key
+    // stemX = 364, stemY = 530, knob covers x: 382..400, y: 510..550
+    return (x >= 340 && x <= 450 && y >= 475 && y <= 585);
+  }
+
   function handlePointerDown(e) {
     e.preventDefault();
     const now = performance.now();
@@ -1115,7 +1318,18 @@
 
     const pt = getCanvasCoords(e);
 
-    // When running: tapping ANYWHERE immediately stops the metronome
+    // 1. Right Button (Winding Key) -> Toggle Mute / Unmute
+    if (isOverWindingKey(pt.x, pt.y)) {
+      toggleMute();
+      return;
+    }
+
+    // Dismiss onboarding hint on any interaction
+    if (showMuteHint) {
+      showMuteHint = false;
+    }
+
+    // When running: tapping ANYWHERE else immediately stops the metronome
     if (isRunning) {
       stopMetronome();
       return;
@@ -1201,12 +1415,16 @@
       targetBpm,
       currentAngle,
       isDraggingWeight,
+      isMuted,
+      showMuteHint,
       TEMPO_MARKS,
       audioState: audioCtx ? audioCtx.state : 'uninitialized'
     }),
     togglePlay,
     startMetronome,
     stopMetronome,
+    toggleMute,
+    isOverWindingKey,
     setBpm: (bpm) => {
       if (!isRunning && TEMPO_MARKS.includes(bpm)) {
         currentBpm = bpm;
