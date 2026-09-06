@@ -1,0 +1,24 @@
+{
+  "name": "metronom-wittner-taktell",
+  "version": "1.0.0",
+  "description": "Wittner Taktell Classic mechanical metronome web app and PWA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "keywords": [
+    "metronome",
+    "wittner",
+    "pwa",
+    "web-audio",
+    "canvas"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "puppeteer-core": "^25.10.0"
+  }
+}

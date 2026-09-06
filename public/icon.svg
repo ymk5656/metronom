@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a292b"/>
+      <stop offset="100%" stop-color="#121213"/>
+    </linearGradient>
+    <linearGradient id="caseGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1e1e20"/>
+      <stop offset="50%" stop-color="#2e2e32"/>
+      <stop offset="100%" stop-color="#151516"/>
+    </linearGradient>
+    <linearGradient id="brassGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c59f4e"/>
+      <stop offset="30%" stop-color="#ebd18a"/>
+      <stop offset="70%" stop-color="#fdf4c7"/>
+      <stop offset="100%" stop-color="#b68936"/>
+    </linearGradient>
+    <linearGradient id="rodGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d0d0d0"/>
+      <stop offset="50%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#999999"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded rect -->
+  <rect width="512" height="512" rx="100" fill="url(#bgGrad)"/>
+
+  <!-- Metronome body group -->
+  <g filter="url(#shadow)">
+    <!-- Main upper pyramid body -->
+    <polygon points="216,60 296,60 376,330 136,330" fill="url(#caseGrad)" stroke="#111" stroke-width="2"/>
+    
+    <!-- Top hood latch -->
+    <path d="M 210,50 L 302,50 L 302,68 L 210,68 Z" fill="#1b1b1d" stroke="#38383a" stroke-width="2"/>
+
+    <!-- Brass face plate -->
+    <polygon points="230,85 282,85 348,310 164,310" fill="url(#brassGrad)" stroke="#8e6c28" stroke-width="1.5"/>
+
+    <!-- Brass scale markings -->
+    <line x1="256" y1="95" x2="256" y2="300" stroke="#72551a" stroke-width="1.5"/>
+    <line x1="240" y1="120" x2="252" y2="120" stroke="#72551a" stroke-width="1.5"/>
+    <line x1="260" y1="135" x2="272" y2="135" stroke="#72551a" stroke-width="1.5"/>
+    <line x1="238" y1="155" x2="252" y2="155" stroke="#72551a" stroke-width="1.5"/>
+    <line x1="260" y1="175" x2="274" y2="175" stroke="#72551a" stroke-width="1.5"/>
+    <line x1="235" y1="200" x2="252" y2="200" stroke="#72551a" stroke-width="1.5"/>
+    <line x1="260" y1="225" x2="277" y2="225" stroke="#72551a" stroke-width="1.5"/>
+    <line x1="232" y1="255" x2="252" y2="255" stroke="#72551a" stroke-width="1.5"/>
+    <line x1="260" y1="285" x2="280" y2="285" stroke="#72551a" stroke-width="1.5"/>
+
+    <!-- Pendulum Rod (angled slightly ~7 deg) -->
+    <g transform="rotate(8, 256, 380)">
+      <!-- Rod -->
+      <line x1="256" y1="70" x2="256" y2="360" stroke="url(#rodGrad)" stroke-width="5" stroke-linecap="round"/>
+      
+      <!-- Sliding Brass Weight -->
+      <polygon points="240,165 272,165 268,205 244,205" fill="url(#brassGrad)" stroke="#664d14" stroke-width="1.5"/>
+      <line x1="242" y1="185" x2="270" y2="185" stroke="#523e0e" stroke-width="1"/>
+    </g>
+
+    <!-- Winding key on right side -->
+    <rect x="366" y="270" width="14" height="8" rx="2" fill="#d4aa48"/>
+    <rect x="376" y="258" width="12" height="32" rx="4" fill="url(#brassGrad)" stroke="#7c5f1c" stroke-width="1"/>
+
+    <!-- Front base cover (chamfered shoulders) -->
+    <polygon points="120,335 152,295 360,295 392,335 392,440 120,440" fill="url(#caseGrad)" stroke="#111" stroke-width="2"/>
+    <polygon points="124,338 154,300 358,300 388,338 388,436 124,436" fill="none" stroke="#3e3e44" stroke-width="1.5"/>
+
+    <!-- Text on base -->
+    <text x="256" y="360" font-family="'Georgia', serif" font-size="24" font-weight="bold" font-style="italic" fill="#d5b364" text-anchor="middle" letter-spacing="1">Mozart</text>
+    <text x="256" y="390" font-family="'Georgia', serif" font-size="26" font-weight="bold" fill="#e8cb85" text-anchor="middle" letter-spacing="2">Classic</text>
+
+    <!-- Small digital LED display -->
+    <rect x="216" y="408" width="80" height="20" rx="4" fill="#08080a" stroke="#252528" stroke-width="1"/>
+    <text x="256" y="422" font-family="'Courier New', monospace" font-size="12" font-weight="bold" fill="#00ffcc" text-anchor="middle">120 BPM</text>
+  </g>
+</svg>

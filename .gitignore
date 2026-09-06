@@ -1,0 +1,7 @@
+node_modules/
+.vercel/
+tmp_profile/
+tmp_profile*/
+*.log
+.DS_Store
+Thumbs.db
