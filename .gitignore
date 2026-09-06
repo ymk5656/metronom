@@ -5,3 +5,5 @@ tmp_profile*/
 *.log
 .DS_Store
 Thumbs.db
+
+.vercel
