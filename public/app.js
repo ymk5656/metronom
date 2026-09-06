@@ -605,10 +605,10 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Left inscription: "Wittner Metronom"
+    // Left inscription: "Yearnmin Metronom"
     ctx.fillStyle = '#2f210a';
-    ctx.font = 'italic bold 10.5px "Times New Roman", Times, Georgia, serif';
-    ctx.fillText('Wittner', 170, 484);
+    ctx.font = 'italic bold 10px "Times New Roman", Times, Georgia, serif';
+    ctx.fillText('Yearnmin', 170, 484);
     ctx.font = 'bold 8px -apple-system, sans-serif';
     ctx.fillText('Metronom', 170, 497);
 
@@ -618,13 +618,13 @@
     ctx.font = 'italic 9px "Times New Roman", Times, Georgia, serif';
     ctx.fillText('Classic', 290, 497);
 
-    // Center bottom: "MADE" on left of slot, "GERMANY" on right of slot
+    // Center bottom: "MADE IN" on left of slot, "KOREA" on right of slot
     ctx.font = 'bold 6.5px -apple-system, sans-serif';
     ctx.letterSpacing = '1px';
     ctx.textAlign = 'right';
-    ctx.fillText('MADE', CX - 8, 513);
+    ctx.fillText('MADE IN', CX - 8, 513);
     ctx.textAlign = 'left';
-    ctx.fillText('GERMANY', CX + 8, 513);
+    ctx.fillText('KOREA', CX + 8, 513);
     ctx.letterSpacing = '0px';
 
     // Tempo markings and notches

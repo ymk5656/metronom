@@ -1,7 +1,7 @@
 {
-  "name": "Wittner Mozart Classic Metronome",
+  "name": "Yearnmin Mozart Classic Metronome",
   "short_name": "Mozart",
-  "description": "Visual and mechanical replication of the classic Wittner Mozart Classic wind-up metronome.",
+  "description": "Visual and mechanical replication of the classic Yearnmin Mozart Classic wind-up metronome.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

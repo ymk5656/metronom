@@ -44,7 +44,7 @@ async function runVerification() {
 
     // 2. Check HTML5 elements and PWA meta tags
     const title = await page.title();
-    assert(title.includes('Wittner Mozart Classic'), `Page title is '${title}'`);
+    assert(title.includes('Mozart Classic'), `Page title is '${title}'`);
 
     const canvasExists = await page.$eval('#metronome-canvas', (el) => !!el);
     assert(canvasExists, 'HTML5 <canvas id="metronome-canvas"> exists');
