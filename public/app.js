@@ -605,12 +605,12 @@
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Left inscription: "Yearnmin Metronom"
+    // Left inscription: "Yearnmin Metronome"
     ctx.fillStyle = '#2f210a';
     ctx.font = 'italic bold 10px "Times New Roman", Times, Georgia, serif';
     ctx.fillText('Yearnmin', 170, 484);
     ctx.font = 'bold 8px -apple-system, sans-serif';
-    ctx.fillText('Metronom', 170, 497);
+    ctx.fillText('Metronome', 170, 497);
 
     // Right inscription: "Mozart Classic"
     ctx.font = 'bold 9.5px "Times New Roman", Times, Georgia, serif';
